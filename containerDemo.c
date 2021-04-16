@@ -20,6 +20,7 @@
 #define errExit(msg) {perror(msg); exit(EXIT_FAILURE);}
 
 void assign_ip_and_make_veth_up(const char *veth0_name,const char *veth0_ip);
+void delete_veth(const char *veth_name);
 
 void mount_namespace(const char *file_system)
 {
@@ -106,6 +107,9 @@ int namespace_handler(void *args)
 
     /* spawn a  shell */
     execlp("/bin/bash","/bin/bash",NULL);
+
+    /* delete child namespace veth */
+    delete_veth(veth_name);
     
     return 0;
 }
@@ -126,6 +130,13 @@ void assign_ip_and_make_veth_up(const char *veth_name,const char *veth_ip)
     system(cmd_buff);
     sprintf(cmd_buff,"ip link set dev %s up",veth_name);
     system(cmd_buff);
+}
+
+void delete_veth(const char *veth_name)
+{
+	char cmd_buff[62];
+	sprintf(cmd_buff,"ip link delete %s",veth_name);
+	system(cmd_buff);
 }
 
 int main(int argc, char *argv[])
@@ -174,6 +185,10 @@ int main(int argc, char *argv[])
 
     if (waitpid(child_pid, NULL, 0) == -1)      /* Wait for child */
         errExit("waitpid");
+  
+   /* delete parent namespace veth */ 
+    delete_veth(argv[4]);
+
     printf("END\n");
     exit(EXIT_SUCCESS);
 
