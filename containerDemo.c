@@ -44,7 +44,7 @@ void pid_namespace()
     const char *mount_point = "/proc";
     if (mount("proc", mount_point, "proc", 0, NULL) == -1)
         errExit("mount in pid namespace");
-    printf("Mounting procfs at %s\n", mount_point);
+    // printf("Mounting procfs at %s\n", mount_point);
 }
 
 void uts_namespace(const char *child_host_name)
@@ -57,7 +57,7 @@ void uts_namespace(const char *child_host_name)
     /* Retrieve and display hostname */
     if (uname(&uts) == -1)
         errExit("uname");
-    printf("hostname in child uts namespace: %s\n", uts.nodename);
+    // printf("hostname in child uts namespace: %s\n", uts.nodename);
 }
 
 void network_namespace(const char *netspace_name)
@@ -78,7 +78,7 @@ void network_namespace(const char *netspace_name)
 
 int namespace_handler(void *args)
 {
-    printf("NAMESPACE HANDLER\n");
+    // printf("NAMESPACE HANDLER\n");
     char **argv = (char **)args;
 
     const char *file_system = argv[1];
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 
     /* argv: file_name,file_system_name,child_host_name,netns_name,veth0_name,veth1_name,veth0_ip,veth1_ip */
 
-    printf("ENTER FILE_SYSTEM, HOST_NAME, NETWORK_NAMESPACE IN ORDER\n");
+    // printf("ENTER FILE_SYSTEM, HOST_NAME, NETWORK_NAMESPACE IN ORDER\n");
     if (argc < 3) 
     {
         fprintf(stderr, "Usage: %s <child-hostname>\n", argv[0]);
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     /* Create a child that has its own mount,pid,uts namespace;
        the child commences execution in namespace_handler() */
 
-    printf("CREATING MOUNT, PID, UTS NAMESPACE\n");
+    // printf("CREATING MOUNT, PID, UTS NAMESPACE\n");
     child_pid = clone(namespace_handler,
                         child_stack + STACK_SIZE,   /* Points to start of downwardly growing stack */ 
                         CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | CLONE_NEWNET | SIGCHLD,
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 
     if (uname(&uts) == -1)
         errExit("uname");    
-    printf("hostname in parent uts namespace: %s\n", uts.nodename);
+    // printf("hostname in parent uts namespace: %s\n", uts.nodename);
 
     if (waitpid(child_pid, NULL, 0) == -1)      /* Wait for child */
         errExit("waitpid");
