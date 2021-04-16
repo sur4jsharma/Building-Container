@@ -39,12 +39,16 @@ void mount_namespace(const char *file_system)
     chdir("/");
 }
 
-void pid_namespace()
+void pid_namespace(const char* mount_point)
 {
-    const char *mount_point = "/proc";
-    if (mount("proc", mount_point, "proc", 0, NULL) == -1)
-        errExit("mount in pid namespace");
-    // printf("Mounting procfs at %s\n", mount_point);
+    // const char *mount_point = "/proc";
+    if(mount_point != NULL)
+    {
+        mkdir(mount_point,0555);
+        if (mount("proc", mount_point, "proc", 0, NULL) == -1)
+            errExit("mount in pid namespace");
+        // printf("Mounting procfs at %s\n", mount_point);
+    }
 }
 
 void uts_namespace(const char *child_host_name)
@@ -85,7 +89,8 @@ int namespace_handler(void *args)
     // const char *file_system = "rootfs";
     mount_namespace(file_system);
 
-    pid_namespace();
+    const char* mount_point = argv[8];
+    pid_namespace(mount_point);
 
     const char *child_host_name = argv[2];
     uts_namespace(child_host_name);
