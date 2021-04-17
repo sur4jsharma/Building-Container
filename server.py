@@ -9,7 +9,7 @@ s = socket.socket()
 
 arg_count = len(sys.argv)
 if arg_count == 1:
-    print "server ip address is not passed as argument"
+    print("server ip address is not passed as argument")
     exit(0)
 host = sys.argv[1]
 port = 12345
@@ -17,6 +17,6 @@ s.bind((host, port))
 s.listen(5)
 print("listening")
 cli_socket, addr = s.accept()
-print 'Got connection from', addr
-cli_socket.send('Thank you for connecting')
+print('Got connection from',addr)
+cli_socket.send(bytes('Thank you for connecting').encode('utf-8'))
 cli_socket.close()
