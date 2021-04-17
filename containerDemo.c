@@ -22,24 +22,11 @@
 void assign_ip_and_make_veth_up(const char *veth0_name,const char *veth0_ip);
 void delete_veth(const char *veth_name);
 
-void mount_namespace(const char *file_system)
+void mount_namespace(const char* file_sys)
 {
-    if(mount(file_system,file_system,"ext4",MS_BIND,"") == -1)
-        errExit("mount in mount_namespace");
-    chdir(file_system);
-    const char *old_fs = ".old_fs";
-
-    if( rmdir(old_fs) == -1)
-        errExit("rmdir old_fs");
-
-    if( mkdir(old_fs,0777) == -1)
-        errExit("mkdir old_fs");
-        
-    pivot_root(".",old_fs);
-        // errExit("pivot root")
-    chdir("/");
+	chroot(file_sys);
+	chdir("/");
 }
-
 void pid_namespace(const char* mount_point)
 {
     // const char *mount_point = "/proc";
@@ -67,15 +54,12 @@ void uts_namespace(const char *child_host_name)
 
 void network_namespace(const char *netspace_name)
 {
-
-    // printf("path:%s\n",netspace_name);
     char netns_path[64] = "/var/run/netns/";
     strcat(netns_path,netspace_name);
     int fd = open(netns_path,O_RDONLY | O_CLOEXEC);
     if(fd == -1)
         errExit("open");
     int ret_no = setns(fd,0);
-    // printf("%d\n",temp);
     if(ret_no == -1)
         errExit("setns");
     system("ip link set dev lo up");
@@ -86,16 +70,6 @@ int namespace_handler(void *args)
     // printf("NAMESPACE HANDLER\n");
     char **argv = (char **)args;
 
-    const char *file_system = argv[1];
-    // const char *file_system = "rootfs";
-    mount_namespace(file_system);
-
-    const char* mount_point = argv[8];
-    pid_namespace(mount_point);
-
-    const char *child_host_name = argv[2];
-    uts_namespace(child_host_name);
-    
     /* Attach child process in network namespace */
     const char* nspace_name = argv[3];
     network_namespace(nspace_name);
@@ -105,12 +79,23 @@ int namespace_handler(void *args)
     const char* veth_ip = argv[7];
     assign_ip_and_make_veth_up(veth_name,veth_ip);
 
+    const char *file_system = argv[1];
+    mount_namespace(file_system);
+
+    const char* mount_point = argv[8];
+    pid_namespace(mount_point);
+
+    const char *child_host_name = argv[2];
+    uts_namespace(child_host_name);
+    
     /* spawn a  shell */
     execlp("/bin/bash","/bin/bash",NULL);
 
+    /* unmount proc */
+    system("umount /proc");
+
     /* delete child namespace veth */
     delete_veth(veth_name);
-    
     return 0;
 }
 
@@ -206,16 +191,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
-/* EXTRAS */
-
-
-// void create_network_namespace(const char *netns_name)
-// {
-//     char cmd_buff[1024];
-//     sprintf(cmd_buff,"ip netns add %s",netns_name);
-//     // printf("%s\n",cmd_buff);
-//     system(cmd_buff);
-//     system("ip netns list");
-// }
