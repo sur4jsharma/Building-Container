@@ -183,9 +183,21 @@ int main(int argc, char *argv[])
         errExit("uname");    
     // printf("hostname in parent uts namespace: %s\n", uts.nodename);
 
+  
+    /* memory limit using cgroups */
+    // if(mkdir("/sys/fs/cgroup/memory/memory_limit",0777) == -1)
+    //     errExit("mkdir memory_limit");
+    system("echo 150000000 > /sys/fs/cgroup/memory/memory_limit/memory.limit_in_bytes");
+    system("echo 0 > /sys/fs/cgroup/memory/memory_limit/memory.swappiness");
+
+    char group_task_cmd[256];
+    sprintf(group_task_cmd,"echo %d > /sys/fs/cgroup/memory/memory_limit/tasks",child_pid);
+    system(group_task_cmd);
+
+    /* waiting for child */
     if (waitpid(child_pid, NULL, 0) == -1)      /* Wait for child */
         errExit("waitpid");
-  
+
    /* delete parent namespace veth */ 
     delete_veth(argv[4]);
 
