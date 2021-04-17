@@ -7,6 +7,6 @@ hostname
 echo '\nVIEW OF PROCESSES IN PID NAMESPACE'
 ps
 echo '\nLIMITING MEMORY IN CONTAINER'
-python /code/memory_hungry.py
+PYTHONHASHSEED=0 python2 /code/memory_hungry.py
 echo '\nISOLATION OF NETWORK NAMESPACE'
-python /code/server.py $1
+PYTHONHASHSEED=0 python2 /code/server.py $1
